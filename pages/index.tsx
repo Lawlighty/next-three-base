@@ -426,7 +426,7 @@ export default function Home() {
                   "0%": "#108ee9",
                   "100%": "#87d068",
                 }}
-                percent={parseInt((loadIndex / 25) * 100)}
+                percent={Math.floor((loadIndex / 25) * 100)}
                 format={() => "cgg加载中..."}
                 style={{
                   position: "absolute",
