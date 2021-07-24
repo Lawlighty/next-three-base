@@ -22,7 +22,7 @@ export default function Layout({
         <link rel="icon" href={siteIco} />
         <meta
           name="description"
-          content="this is a website to record lad"
+          content="这是一个基于Next.js 和 Three.js 的 模板"
         ></meta>
         <meta
           property="og:image"

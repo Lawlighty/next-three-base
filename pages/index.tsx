@@ -10,7 +10,7 @@ import { useState, useEffect } from "react";
 import * as THREE from "three";
 import Orbitcontrols from "three-orbitcontrols";
 import { Spin } from "antd";
-
+import { Progress } from "antd";
 export default function Home() {
   let scene, camera, renderer;
   let GLTFLoader;
@@ -26,16 +26,21 @@ export default function Home() {
     { x: -1.16, y: 0.16, z: 0.89, frame: 7 },
   ];
   let poiObjects = [];
+  let loader;
 
+  let gltfObj;
+  let group;
   useEffect(() => {
     init();
   }, []);
   const [allTexture, setAllTexture] = useState({});
   const [isStart, setIsStart] = useState(false);
   const [progress, setProgress] = useState({});
+  const [loadIndex, setloadIndex] = useState(1);
   const init = () => {
+    group = new THREE.Group();
     GLTFLoader = require("three/examples/jsm/loaders/GLTFLoader").GLTFLoader;
-    scene = new THREE.Scene();
+    scene = new THREE.Scene({});
 
     camera = new THREE.PerspectiveCamera(
       90,
@@ -43,17 +48,20 @@ export default function Home() {
       0.1,
       100
     );
-    camera.position.set(0, 0, 3);
+    camera.position.set(0, 0, 4);
 
     renderer = new THREE.WebGLRenderer({
       antialias: true,
     });
+    renderer.setClearColor(0xffffff, 1.0);
     renderer.setSize(document.body.clientWidth, document.body.clientHeight);
     document.getElementById("theatre").appendChild(renderer.domElement);
 
     // 控制器
     let controls = new Orbitcontrols(camera, renderer.domElement);
-
+    controls.autoRotate = true; // 是否自动旋转
+    controls.autoRotateSpeed = 1.0;
+    controls.update();
     loadAllTexture(loadCarModel);
     // 光源
     addLight();
@@ -63,6 +71,7 @@ export default function Home() {
   };
 
   const loadAllTexture = (cb) => {
+    setIsStart(true);
     let loadIndex = 0;
     let textures = [
       "skymap2",
@@ -93,7 +102,6 @@ export default function Home() {
     ];
     function loadNextTexture() {
       let textureName = textures[loadIndex];
-      setIsStart(true);
       loadTexture(
         "images/textures/" + textureName + ".jpg",
         function (texture) {
@@ -104,8 +112,13 @@ export default function Home() {
           setAllTexture({ ...nowAllTexture });
           if (loadIndex < textures.length - 1) {
             loadIndex++;
+            setloadIndex(loadIndex);
             loadNextTexture();
           } else {
+            setTimeout(() => {
+              setIsStart(false);
+            });
+
             if (cb) {
               cb();
             }
@@ -120,19 +133,24 @@ export default function Home() {
     textureLoader.load(filepath, cb);
   };
   const loadCarModel = () => {
-    const loader = new GLTFLoader();
+    // const loader = new GLTFLoader();
+    loader = new GLTFLoader();
 
     loader.load(
       "images/model.gltf",
       function (gltf) {
         console.log("gltf.scene", gltf.scene);
         console.log("gltf.scene.children", gltf.scene.children);
+        gltf.scene.rotation.y += 100;
+        gltfObj = gltf.scene;
         scene.add(gltf.scene);
+        group.add(gltf.scene);
 
         console.log(gltf.scene.children);
 
         // 添加 视频点
         // setupInfoPoint();
+        scene.add(group);
         for (let i = 0; i < gltf.scene.children[0].children.length; i++) {
           let child = gltf.scene.children[0].children[i];
 
@@ -309,7 +327,7 @@ export default function Home() {
   const setupInfoPoint = () => {
     const pointTexture = new THREE.TextureLoader().load("images/point.png");
 
-    let group = new THREE.Group();
+    // group = new THREE.Group();
     let materialC = new THREE.SpriteMaterial({
       map: pointTexture,
       color: 0xffffff,
@@ -385,6 +403,9 @@ export default function Home() {
 
   function loop() {
     requestAnimationFrame(loop);
+    if (group) {
+      group.rotation.y += 0.01;
+    }
     renderer.render(scene, camera);
   }
   return (
@@ -398,10 +419,30 @@ export default function Home() {
           </Head> */}
 
           <main>
-            <Spin tip="超哥哥加载中..." spinning={isStart}>
-              {/* 这是是汽车展示 */}
+            {isStart ? (
+              <Progress
+                type="circle"
+                strokeColor={{
+                  "0%": "#108ee9",
+                  "100%": "#87d068",
+                }}
+                percent={parseInt((loadIndex / 25) * 100)}
+                format={() => "cgg加载中..."}
+                style={{
+                  position: "absolute",
+                  left: "50%",
+                  top: "50%",
+                  transform: "translate(-50%, -50%)",
+                  zIndex: 999,
+                }}
+              />
+            ) : null}
+
+            {/* <Spin tip="超哥哥加载中..." spinning={isStart}>
               <div id="theatre"></div>
-            </Spin>
+            </Spin>  */}
+            {/* 这是是汽车展示 */}
+            <div id="theatre"></div>
           </main>
 
           <footer>
@@ -426,6 +467,14 @@ export default function Home() {
           </footer>
 
           <style jsx>{`
+            .Progress {
+              position: absolute;
+              left: 50%;
+              top: 50%;
+              transform: translate(-50%, -50%);
+              -webkit-transform: translate(-50%, -50%);
+              z-index: 999;
+            }
             .container {
               min-height: 100vh;
               padding: 0 0.5rem;
