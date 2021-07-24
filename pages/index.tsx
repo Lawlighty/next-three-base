@@ -9,6 +9,7 @@ import LoadingPage from "../components/loadingFrame/indexPage";
 import { useState, useEffect } from "react";
 import * as THREE from "three";
 import Orbitcontrols from "three-orbitcontrols";
+import { Spin } from "antd";
 
 export default function Home() {
   let scene, camera, renderer;
@@ -30,6 +31,8 @@ export default function Home() {
     init();
   }, []);
   const [allTexture, setAllTexture] = useState({});
+  const [isStart, setIsStart] = useState(false);
+  const [progress, setProgress] = useState({});
   const init = () => {
     GLTFLoader = require("three/examples/jsm/loaders/GLTFLoader").GLTFLoader;
     scene = new THREE.Scene();
@@ -90,7 +93,7 @@ export default function Home() {
     ];
     function loadNextTexture() {
       let textureName = textures[loadIndex];
-      console.log(textureName);
+      setIsStart(true);
       loadTexture(
         "images/textures/" + textureName + ".jpg",
         function (texture) {
@@ -286,9 +289,18 @@ export default function Home() {
           }
         }
       },
-      function (xhr) {
-        console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
+      ({ loaded, total }) => {
+        if (loaded / total == 1) {
+          setIsStart(false);
+        }
       },
+      // function (xhr) {
+      //   console.log("xhr " + xhr + "% loaded");
+      //   console.log("xhr.loaded " + xhr.loaded + "% loaded");
+      //   console.log("xhr.total " + xhr.total + "% loaded");
+      //   console.log("xhr key", Object.keys(xhr));
+      //   setIsStart(false);
+      // },
       function (error) {
         console.log("An error happened");
       }
@@ -386,8 +398,10 @@ export default function Home() {
           </Head> */}
 
           <main>
-            {/* 这是是汽车展示 */}
-            <div id="theatre"></div>
+            <Spin tip="超哥哥加载中..." spinning={isStart}>
+              {/* 这是是汽车展示 */}
+              <div id="theatre"></div>
+            </Spin>
           </main>
 
           <footer>
