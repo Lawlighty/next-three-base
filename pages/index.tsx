@@ -31,9 +31,12 @@ export default function Home() {
 
           <footer>
             <a
-              href="javascript:void(0)"
+              href="#"
               target="_blank"
               rel="noopener noreferrer"
+              onClick={(e) => {
+                e.preventDefault();
+              }}
             >
               <div className="logo_desc">
                 狗狗币<strong className="logo_desc_info">1</strong>U{" "}
